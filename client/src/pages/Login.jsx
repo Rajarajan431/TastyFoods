@@ -1,7 +1,53 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Login() {
+  const [formData, setFormData] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    })
+  }
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true)
+
+      const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers:{
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify(formData)
+    })
+
+    const data = await res.json()
+    console.log(data);
+
+    if(data.success === false) {
+      setLoading(false)
+      setError(data.message)
+      return
+    }
+
+    setLoading(false)
+    setError(null)
+    navigate("/")
+
+    } catch (error) {
+      setError(error.message)
+      setLoading(false)
+    }
+  }
+
   return (
     <div className='max-w-md mx-auto p-3'>
 
@@ -9,12 +55,14 @@ export default function Login() {
         Login
       </h1>
       
-      <form className='flex flex-col gap-3'>
+      <form className='flex flex-col gap-3' onSubmit={handleSubmit}>
   
         <input 
           type="text"
           placeholder='Email' 
           className='p-2 border-2 rounded-lg'
+          onChange={handleChange}
+          id='email'
           required
         />
 
@@ -22,12 +70,16 @@ export default function Login() {
           type="Password"
           placeholder='Password' 
           className='p-2 border-2 rounded-lg'
+          id='password'
+          onChange={handleChange}
           required
         />
 
-        <button className='bg-red-600 p-3 rounded-lg text-white text-lg
+        <button  
+          disabled={loading}
+          className='bg-red-600 p-3 rounded-lg text-white text-lg
           hover:opacity-75'>
-          Sign up
+          { loading ? "Loading..." : "Sign In" }
         </button>
 
       </form>
@@ -38,6 +90,7 @@ export default function Login() {
           Sign up
         </Link>
       </div>
+      {error && <p className='text-red-700 mt-5'>{error}</p>}
 
     </div>
   )

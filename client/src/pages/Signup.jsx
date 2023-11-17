@@ -89,7 +89,7 @@ export default function Signup() {
         <button disabled={loading} 
           className='bg-red-600 p-3 rounded-lg text-white text-lg
           hover:opacity-75'>
-          { loading ? 'Loading...' : 'Sign up' }
+          { loading ? 'Loading...' : 'Sign Up' }
         </button>
 
       </form>
