@@ -6,6 +6,7 @@ import {
     signInSuccess, 
     signInFailure 
   } from '../redux/user/userSlice'
+import OAuth from '../components/OAuth'
 
 export default function Login() {
   const [formData, setFormData] = useState({})
@@ -84,6 +85,7 @@ export default function Login() {
           hover:opacity-75'>
           { loading ? "Loading..." : "Sign In" }
         </button>
+        <OAuth />
 
       </form>
 
