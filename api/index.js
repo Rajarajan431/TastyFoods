@@ -2,6 +2,8 @@ import express from 'express'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import authRouter from './routes/authRoutes.js'
+import userRouter from './routes/userRoutes.js'
+import cookieParser from 'cookie-parser'
 dotenv.config()
 
 const app = express()
@@ -15,12 +17,14 @@ mongoose.connect(process.env.MONGODB)
 })
 
 app.use(express.json())
-
-app.use('/api/auth', authRouter)
+app.use(cookieParser())
 
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 })
+
+app.use('/api/auth', authRouter)
+app.use('/api/user', userRouter)
 
 app.use(( err, req, res, next ) => {
     const statusCode = err.statusCode || 500;
