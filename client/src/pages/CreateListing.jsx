@@ -1,14 +1,26 @@
 import React, { useState } from 'react'
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage'
 import { app } from '../Firebase'
+import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 
 export default function CreateListing() {
+    const { currentUser } = useSelector((state) => state.user)
     const [files, setFiles] = useState([])
+    const navigate = useNavigate()
     const [formData, setFormData] = useState({
       imageUrls: [],
+      name: '',
+      description: '',
+      type: '',
+      price:'10',
+      rating: '5'
+
     })
     const [imageUploadError, setimageUploadError] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(false)
 
     console.log(formData);
 
@@ -71,6 +83,60 @@ export default function CreateListing() {
       })
     }
 
+    const handleChange = (e) => {
+      if(
+          e.target.type === 'number'||
+          e.target.type === 'text'||
+          e.target.type === 'textarea'
+        ) {
+          setFormData({
+            ...formData, 
+            [e.target.id]: e.target.value,
+          })
+        }
+
+        if(e.target.id === "veg" || e.target.id === 'nonveg') {
+          setFormData(
+            { ...formData, 
+              type: e.target.id, 
+            })
+        }
+    }
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      try {
+        if (formData.imageUrls.length < 1)
+        return setError('You must upload at least one image');
+        
+        setLoading(true);
+        setError(false);
+
+        const res = await fetch('/api/listing/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            userRef: currentUser._id,
+          }),
+        });
+
+        const data = await res.json();
+        setLoading(false);
+        if (data.success === false) {
+          setError(data.message);
+        }
+        navigate(`/listing/${data._id}`);
+        
+      } catch (error) {
+        setError(error.message)
+        setLoading(false)
+      }
+    }
+
   return (
     <main className='p-3 max-w-lg mx-auto'>
         
@@ -78,7 +144,7 @@ export default function CreateListing() {
             <h1 className='text-2xl font-medium'>My Listing</h1>
         </div>
 
-        <form className='flex flex-col gap-4'>
+        <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
             
             <input 
                 type="text" 
@@ -86,7 +152,9 @@ export default function CreateListing() {
                 id='name' 
                 className='border p-3 rounded-lg'
                 minLength='10'
-                maxLength='62'    
+                maxLength='62'
+                onChange={handleChange}
+                value={formData.name}    
             />
 
             <textarea 
@@ -95,7 +163,9 @@ export default function CreateListing() {
                 id='description' 
                 className='border p-3 rounded-lg'
                 minLength='10'
-                maxLength='62'    
+                maxLength='62'
+                onChange={handleChange}
+                value={formData.description}    
             />
 
            <div className="flex flex-wrap gap-6 border 
@@ -105,7 +175,8 @@ export default function CreateListing() {
                 type='checkbox'
                 id='veg'
                 className='w-5'
-                
+                onChange={handleChange}
+                checked={formData.type === 'veg'}
               />
               <span>Veg</span>
             </div>
@@ -114,6 +185,8 @@ export default function CreateListing() {
                 type='checkbox'
                 id='nonveg'
                 className='w-5'
+                onChange={handleChange}
+                checked={formData.type === 'nonveg'}
                
               />
               <span>Non-Veg</span>
@@ -127,9 +200,11 @@ export default function CreateListing() {
                 <input 
                     type="number"
                     id='price'
-                    min='50'
+                    min='10'
                     max='10000'
-                    className='p-3 border border-slate-700 rounded-lg'    
+                    className='p-3 border border-slate-700 rounded-lg' 
+                    onChange={handleChange}
+                    value={formData.price}   
                 />
                 
            </div>
@@ -143,6 +218,8 @@ export default function CreateListing() {
                         min='0'
                         max='100000'
                         className='p-3 border border-slate-700 rounded-lg'
+                        onChange={handleChange}
+                        value={formData.rating}
                     />
             </div>
 
@@ -163,7 +240,7 @@ export default function CreateListing() {
             <button
               onClick={handleImageSubmit}
               type='button' 
-              className='p-3 bg-green-700 text-white rounded-lg 
+              className='p-3 border border-black rounded-lg 
               uppercase hover:opacity-95 disabled:opacity-80'>
                { uploading ? 'Uploading...' : 'Upload' }
             </button>
@@ -196,6 +273,12 @@ export default function CreateListing() {
                 
             ))}
 
+            <button className='p-3 bg-green-700 text-white rounded-lg 
+              uppercase hover:opacity-95 disabled:opacity-80'>
+                { loading ? 'Creating...' : 'Creating Listing' }
+              </button>
+              
+              {error && <p className='text-red-700 text-sm'>{error}</p>}
 
         </form>
 
