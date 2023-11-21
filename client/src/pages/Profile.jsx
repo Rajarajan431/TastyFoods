@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useRef } from 'react'
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage'
-import { app } from '../firebase'
+import { app } from '../Firebase.js'
 import { 
     updateUserStart, updateUserSuccess, updateUserFailure,
     deleteUserStart, deleteUserSuccess, deleteUserFailure,
@@ -139,7 +139,7 @@ export default function Profile() {
     }
   }
 
-  const showListings = async() => {
+  const handleshowListings = async() => {
     try {
       setShowListingError(false)
       const res = await fetch(`/api/user/listings/${currentUser._id}`)
@@ -252,7 +252,7 @@ export default function Profile() {
       </p>    
       
       <button 
-        onClick={showListings}
+        onClick={handleshowListings}
         className='text-green-700 mt-5 w-full'>
         Show Listings
       </button>

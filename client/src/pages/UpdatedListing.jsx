@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage'
 import { app } from '../Firebase'
 import { useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
-export default function CreateListing() {
+export default function UpdatedListing() {
     const { currentUser } = useSelector((state) => state.user)
     const [files, setFiles] = useState([])
     const navigate = useNavigate()
+    const params = useParams()
     const [formData, setFormData] = useState({
       imageUrls: [],
       name: '',
@@ -22,7 +23,20 @@ export default function CreateListing() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(false)
 
-    console.log(formData);
+    useEffect(() => {
+      const fetchListing = async() => {
+        const listingId = params.listingId;
+        const res = await fetch(`/api/listing/get/${listingId}`)
+        const data = await res.json()
+  
+        if(data.success === false) {
+          console.log(data.message)
+          return
+        }
+        setFormData(data)
+      }
+      fetchListing()
+    },[])
 
     const handleImageSubmit =  (e) => {
       if(files.length > 0 && files.length + formData.imageUrls.length < 7) {
@@ -113,7 +127,7 @@ export default function CreateListing() {
         setLoading(true);
         setError(false);
 
-        const res = await fetch('/api/listing/create', {
+        const res = await fetch(`/api/listing/update/${params.listingId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -129,7 +143,7 @@ export default function CreateListing() {
         if (data.success === false) {
           setError(data.message);
         }
-        navigate('/');
+        navigate(`/listing/${data._id}`);
         
       } catch (error) {
         setError(error.message)
@@ -141,7 +155,7 @@ export default function CreateListing() {
     <main className='p-3 max-w-lg mx-auto'>
         
         <div className="text-center my-7">
-            <h1 className='text-2xl font-medium'>My Listing</h1>
+            <h1 className='text-2xl font-medium'>Update Listing</h1>
         </div>
 
         <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
@@ -152,7 +166,7 @@ export default function CreateListing() {
                 id='name' 
                 className='border p-3 rounded-lg'
                 minLength='10'
-                maxLength='100'
+                maxLength='62'
                 onChange={handleChange}
                 value={formData.name}    
             />
@@ -163,7 +177,7 @@ export default function CreateListing() {
                 id='description' 
                 className='border p-3 rounded-lg'
                 minLength='10'
-                maxLength='1000'
+                maxLength='62'
                 onChange={handleChange}
                 value={formData.description}    
             />
@@ -275,7 +289,7 @@ export default function CreateListing() {
 
             <button className='p-3 bg-green-700 text-white rounded-lg 
               uppercase hover:opacity-95 disabled:opacity-80'>
-                { loading ? 'Creating...' : 'Creating Listing' }
+                { loading ? 'Updating...' : 'Update Listing' }
               </button>
               
               {error && <p className='text-red-700 text-sm'>{error}</p>}
